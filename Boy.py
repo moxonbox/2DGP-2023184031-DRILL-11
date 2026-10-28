@@ -17,6 +17,30 @@ class BoyState(State):
         boy.draw_sprite()
 
 
+class Idle(BoyState):
+    def __init__(self):
+        super().__init__('idle')
+
+    def update(self, boy, dt):
+        boy.idle_elapsed += dt
+        if boy.idle_elapsed >= 5.0:
+            boy.sleep()
+        boy.animate_and_move(dt)
+
+
+class Sleep(BoyState):
+    def __init__(self):
+        super().__init__('Sleep')
+
+    def enter(self, event_data):
+        super().enter(event_data)
+        event_data.model.keys.clear()
+        event_data.model.direction = 0
+
+    def draw(self, boy):
+        boy.draw_sleep()
+
+
 class Boy:
     # Grass is centered at y=30; its visible surface near the boy is y=55.
     GROUND_Y = 55
