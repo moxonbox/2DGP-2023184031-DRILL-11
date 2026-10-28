@@ -86,6 +86,63 @@ class BoyTests(unittest.TestCase):
         self.assertAlmostEqual(self.boy.y, other.y)
         self.assertAlmostEqual(self.boy.vertical_speed, other.vertical_speed)
 
+    def test_autorun_latches_movement_and_expires_then_sleeps(self):
+        self.key(pico.SDLK_d)
+        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_d, False)
+        self.boy.update(0.5)
+        self.assertEqual((self.boy.state, self.boy.x), ('autorun', 520))
+        self.boy.update(4.5)
+        self.assertEqual((self.boy.state, self.boy.direction, self.boy.keys), ('idle', 0, set()))
+        self.boy.update(5)
+        self.assertEqual(self.boy.state, 'Sleep')
+
+    def test_autorun_new_state_keys_cancel_immediately(self):
+        for key, state in ((pico.SDLK_a, 'walk'), (pico.SDLK_LCTRL, 'idle'),
+                           (pico.SDLK_LSHIFT, 'idle'), (pico.SDLK_SPACE, 'jump')):
+            with self.subTest(key=key):
+                self.boy = Boy()
+                self.key(pico.SDLK_d)
+                self.key(pico.SDLK_e)
+                self.key(pico.SDLK_d, False)
+                self.key(key)
+                self.assertEqual(self.boy.state, state)
+
+    def test_autorun_latches_all_ground_states(self):
+        for source in self.boy.ANIMATIONS:
+            with self.subTest(source=source):
+                self.boy = Boy()
+                self.boy.machine.set_state(source)
+                self.boy.direction = 1 if source in ('walk', 'slow_walk', 'run') else 0
+                self.key(pico.SDLK_e)
+                self.boy.update(0.1)
+                self.assertEqual((self.boy.state, self.boy.auto_state), ('autorun', source))
+                self.assertAlmostEqual(self.boy.x, 400 + self.boy.ANIMATIONS[source][2] * 1.5 * 0.1)
+
+    def test_autorun_toggle_repeat_and_unrelated_keys(self):
+        self.key(pico.SDLK_e)
+        self.boy.update(4)
+        self.key(pico.SDLK_e)
+        self.key('unrelated')
+        self.assertEqual((self.boy.state, self.boy.auto_elapsed), ('autorun', 4))
+        self.key(pico.SDLK_e, False)
+        self.key(pico.SDLK_e)
+        self.assertEqual(self.boy.state, 'idle')
+
+    def test_autorun_repeated_held_movement_key_does_not_cancel(self):
+        self.key(pico.SDLK_d)
+        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_d)
+        self.assertEqual(self.boy.state, 'autorun')
+        self.key(pico.SDLK_d, False)
+        self.key(pico.SDLK_d)
+        self.assertEqual(self.boy.state, 'walk')
+
+    def test_autorun_timeout_preserves_remaining_idle_time(self):
+        self.key(pico.SDLK_e)
+        self.boy.update(9)
+        self.assertEqual((self.boy.state, self.boy.idle_elapsed), ('idle', 4))
+
     def test_idle_loops_without_moving(self):
         self.assertEqual(self.boy.state, 'idle')
         self.boy.update(0.25)
