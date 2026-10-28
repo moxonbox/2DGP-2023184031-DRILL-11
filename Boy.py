@@ -291,8 +291,11 @@ class Boy:
         row = right_row if self.face_dir == 1 else left_row
         frame = frames[int(self.frame)]
         # Keep feet on the surface even when the source frame's padding changes.
-        draw_y = self.y + 14 - self.FOOT_PADDING[row][frame]
+        scale = self.sprite_scale()
+        feet_y = self.y - 36
+        draw_y = feet_y + (50 - self.FOOT_PADDING[row][frame]) * scale
+        size = () if scale == 1 else (100 * scale, 100 * scale)
         self.image.clip_draw(
             frame * 100, row * 100, 100, 100,
-            self.x, draw_y,
+            self.x, draw_y, *size,
         )
