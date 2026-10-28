@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
 os.environ['SDL_AUDIODRIVER'] = 'dummy'
-root = Path(__file__).resolve().parents[1]
+root = Path(__file__).resolve().parent
 os.chdir(root)
 sys.path.insert(0, str(root))
 

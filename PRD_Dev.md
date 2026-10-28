@@ -78,8 +78,8 @@ Sleep에서 방향키로 즉시 이동할 수 있다. 보조키만으로는 깨�
 ## 5. 산출물과 커밋
 
 - `PRD_Dev.md`: 결정 사항, 상태 전환, 구현 및 검증 기준.
-- `docs/boy_state_diagram.svg`: 명세 기반 상태 다이어그램 이미지.
-- `docs/boy_state_diagram.png`: 문서 뷰어용 상태 다이어그램 이미지.
+- `boy_state_diagram.svg`: 명세 기반 상태 다이어그램 이미지.
+- `boy_state_diagram.png`: 문서 뷰어용 상태 다이어그램 이미지.
 - `Boy.py`, `main.py`: 상태 클래스 및 게임 루프 구현.
 - `test_boy.py`: 실제 transitions를 사용하는 비화면 회귀 테스트.
 - `test_main.py`: 긴 프레임의 경과 시간 보존 및 종료 이벤트 검사.
@@ -98,7 +98,7 @@ Computer-Use를 이용한 조작은 사용자 승인 없이는 수행하지 않�
 
 ## 7. 상태 다이어그램
 
-![Boy 상태 전환](docs/boy_state_diagram.png)
+![Boy 상태 전환](boy_state_diagram.png)
 
 이미지에서 Ground는 idle/slow_walk/walk/run의 묶음이다. 해당 묶음의 모든 상태에서 점프와 자동 유지가 가능하다.
 Sleep도 자동 유지에 진입할 수 있다. jump에서는 A를 무시한다.
@@ -122,3 +122,16 @@ Sleep도 자동 유지에 진입할 수 있다. jump에서는 A를 무시한다.
 3. 긴 정지 후 복귀하면 경과 시간에 비례해 반복 갱신했다. 상태별 해석 계산을 이용하여 반복을 제거했다.
 4. 다른 폴더에서 main.py를 실행하면 grass.png를 찾지 못했다. Boy와 동일하게 파일 기준 경로를 사용한다.
 5. 수면 진입 시 입력 초기화가 두 곳에 중복되었다. Sleep 상태의 진입 처리만 유지한다.
+
+## 10. 파일 정리
+
+실행에서 사용하지 않는 루트의 `boys_team_10000.py`, `ball21x21.png`, `ball41x41.png`, `run_animation.png`를 제거했다.
+문서, 다이어그램, 회귀 테스트와 렌더링 검증 도구는 유지한다.
+`docs`, `screenshots`, `__pycache__` 아래 파일은 삭제하지 않고 루트로 이동했다.
+기존 비교 이미지의 이름 충돌은 `before_`, `after_` 접두사로 구분한다.
+이동 직후 모든 파일의 SHA256이 원본과 같은지 확인한 뒤 빈 폴더만 삭제했다. `.git`은 유지한다.
+기존 바이트코드 파일은 루트에 보존하지만 `.gitignore`의 `*.py[cod]` 규칙에 따라 커밋하지 않는다.
+
+렌더링 검증 명령은 `python -B capture_ground.py <출력 폴더>`이다.
+출력 폴더는 저장소 외부의 절대 경로를 사용한다. 테스트는 `python -B -m unittest -v`로 실행한다.
+일반 실행은 Python이 `__pycache__` 폴더를 다시 생성할 수 있으므로, 폴더 생성을 피하려면 `python -B main.py`를 사용한다.
