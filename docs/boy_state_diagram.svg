@@ -36,4 +36,5 @@
   <text x="50" y="795">지상 공통: S/D 없음 → idle · Ctrl + 이동 → slow_walk · Shift + 이동 → run</text>
   <text x="50" y="827">Shift 해제: 달리기 직전 보행 복귀 · 양방향 동시 입력: 정지 · 동일 상태 반복 입력: 프레임 유지</text>
   <text x="50" y="859">자동 유지 중 상태 키: S / D / Ctrl / Shift / Space · Sleep의 보조키 단독 입력: 수면 유지</text>
+  <text x="50" y="888" class="small">시간 처리: 착지·5초 만료 시점을 계산하고 남은 시간을 다음 상태에 전달 · 5초 경계 오차 허용 1e-9초</text>
 </svg>
