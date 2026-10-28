@@ -6,7 +6,15 @@ from pico2d import (
     SDLK_a, SDLK_d, SDLK_LSHIFT, SDLK_RSHIFT, SDLK_LCTRL, SDLK_RCTRL,
     SDLK_SPACE,
 )
-from transitions import Machine
+from transitions import Machine, State
+
+
+class BoyState(State):
+    def update(self, boy, dt):
+        boy.animate_and_move(dt)
+
+    def draw(self, boy):
+        boy.draw_sprite()
 
 
 class Boy:
