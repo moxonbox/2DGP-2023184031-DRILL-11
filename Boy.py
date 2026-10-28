@@ -93,6 +93,9 @@ class AutoRun(BoyState):
 
 
 class Boy:
+    JUMP_SPEED = 420
+    GRAVITY = 980
+    AUTO_MULTIPLIER = 1.5
     # Grass is centered at y=30; its visible surface near the boy is y=55.
     GROUND_Y = 55
     SLEEP_GROUND_Y = 40
@@ -122,16 +125,25 @@ class Boy:
         self.direction = 0
         self.idle_elapsed = 0
         self.run_previous_state = 'walk'
+        self.vertical_speed = 0
+        self.air_state = 'idle'
+        self.auto_state = 'idle'
+        self.auto_elapsed = 0
+        self.auto_key_down = False
         self.machine = Machine(
-            model=self, states=list(self.ANIMATIONS), initial='idle',
+            model=self,
+            states=[Idle(), Sleep(), SlowWalk(), Walk(), Run(), Jump(), AutoRun()],
+            initial='idle',
             auto_transitions=False, after_state_change='reset_animation',
             transitions=[
-                ['stop', ['slow_walk', 'walk', 'run'], 'idle'],
-                ['slow_walk', ['idle', 'walk', 'run', 'Sleep'], 'slow_walk'],
-                ['walk', ['idle', 'slow_walk', 'run', 'Sleep'], 'walk'],
-                ['run', ['idle', 'slow_walk', 'walk', 'Sleep'], 'run'],
+                ['stop', ['slow_walk', 'walk', 'run', 'jump', 'autorun'], 'idle'],
+                ['slow_walk', ['idle', 'walk', 'run', 'Sleep', 'jump', 'autorun'], 'slow_walk'],
+                ['walk', ['idle', 'slow_walk', 'run', 'Sleep', 'jump', 'autorun'], 'walk'],
+                ['run', ['idle', 'slow_walk', 'walk', 'Sleep', 'jump', 'autorun'], 'run'],
                 ['sleep', 'idle', 'Sleep'],
                 ['wake', 'Sleep', 'idle'],
+                ['jump', ['idle', 'slow_walk', 'walk', 'run'], 'jump'],
+                ['autorun', ['idle', 'slow_walk', 'walk', 'run', 'Sleep'], 'autorun'],
             ],
         )
 
@@ -181,25 +193,34 @@ class Boy:
             getattr(self, 'stop' if target == 'idle' else target)()
 
     def update(self, dt):
-        if self.state == 'idle':
-            self.idle_elapsed += dt
-            if self.idle_elapsed >= 5.0:
-                self.sleep()
-        frames, fps, speed, _, _ = self.ANIMATIONS[self.state]
+        self.machine.get_state(self.state).update(self, dt)
+
+    def animation_state(self):
+        if self.state == 'jump':
+            return self.air_state
+        if self.state == 'autorun':
+            return self.auto_state
+        return self.state
+
+    def animate_and_move(self, dt, bounce=False):
+        frames, fps, speed, _, _ = self.ANIMATIONS[self.animation_state()]
         self.frame = (self.frame + fps * dt) % len(frames)
         self.x = max(50, min(get_canvas_width() - 50,
                              self.x + self.direction * speed * dt))
 
     def draw(self):
-        if self.state == 'Sleep':
-            # Crop the visible upright pose so rotated padding cannot float above grass.
-            left, bottom = (31, 314) if self.face_dir == 1 else (36, 214)
-            self.image.clip_composite_draw(
-                left, bottom, 35, 78, self.face_dir * pi / 2, '',
-                self.x, self.SLEEP_GROUND_Y + 35 / 2, 35, 78,
-            )
-            return
-        frames, _, _, right_row, left_row = self.ANIMATIONS[self.state]
+        self.machine.get_state(self.state).draw(self)
+
+    def draw_sleep(self):
+        # Crop padding so the rotated body rests at y=40.
+        left, bottom = (31, 314) if self.face_dir == 1 else (36, 214)
+        self.image.clip_composite_draw(
+            left, bottom, 35, 78, self.face_dir * pi / 2, '',
+            self.x, self.SLEEP_GROUND_Y + 35 / 2, 35, 78,
+        )
+
+    def draw_sprite(self):
+        frames, _, _, right_row, left_row = self.ANIMATIONS[self.animation_state()]
         row = right_row if self.face_dir == 1 else left_row
         frame = frames[int(self.frame)]
         # Keep feet on the surface even when the source frame's padding changes.
