@@ -175,6 +175,7 @@ class Boy:
             return
         if event.key not in (
             SDLK_a, SDLK_d, SDLK_LSHIFT, SDLK_RSHIFT, SDLK_LCTRL, SDLK_RCTRL,
+            SDLK_SPACE,
         ):
             return
         if event.type == SDL_KEYDOWN:
@@ -187,22 +188,29 @@ class Boy:
             if event.type == SDL_KEYUP:
                 return
             self.stop()
+        if event.key == SDLK_SPACE:
+            if event.type == SDL_KEYDOWN and self.state != 'jump':
+                self.apply_movement()
+                self.air_state = self.state
+                self.jump()
+            return
         self.apply_movement()
 
     def apply_movement(self):
+        movement_state = self.air_state if self.state == 'jump' else self.state
         self.direction = int(SDLK_d in self.keys) - int(SDLK_a in self.keys)
         if self.state == 'Sleep' and not self.direction:
             return
         if self.direction:
             self.face_dir = self.direction
             if self.keys & {SDLK_LSHIFT, SDLK_RSHIFT}:
-                if self.state != 'run':
+                if movement_state != 'run':
                     self.run_previous_state = (
-                        self.state if self.state in ('walk', 'slow_walk') else
+                        movement_state if movement_state in ('walk', 'slow_walk') else
                         'slow_walk' if self.keys & {SDLK_LCTRL, SDLK_RCTRL} else 'walk'
                     )
                 target = 'run'
-            elif self.state == 'run':
+            elif movement_state == 'run':
                 target = self.run_previous_state
             elif self.keys & {SDLK_LCTRL, SDLK_RCTRL}:
                 target = 'slow_walk'
@@ -210,6 +218,9 @@ class Boy:
                 target = 'walk'
         else:
             target = 'idle'
+        if self.state == 'jump':
+            self.air_state = target
+            return
         if target != self.state:
             getattr(self, 'stop' if target == 'idle' else target)()
 
