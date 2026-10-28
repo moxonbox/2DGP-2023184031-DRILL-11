@@ -227,6 +227,15 @@ class Boy:
     def update(self, dt):
         self.machine.get_state(self.state).update(self, dt)
 
+    def update_jump(self, dt):
+        self.y += self.vertical_speed * dt - 0.5 * self.GRAVITY * dt * dt
+        self.vertical_speed -= self.GRAVITY * dt
+        if self.y <= self.GROUND_Y + 36 and self.vertical_speed <= 0:
+            self.y = self.GROUND_Y + 36
+            self.vertical_speed = 0
+            target = self.air_state
+            getattr(self, 'stop' if target == 'idle' else target)()
+
     def animation_state(self):
         if self.state == 'jump':
             return self.air_state
