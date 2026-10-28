@@ -15,7 +15,9 @@ for value, name in enumerate((
 pico.load_image = Mock()
 pico.get_canvas_width = lambda: 800
 with patch.dict(sys.modules, pico2d=pico):
-    from Boy import Boy
+    import Boy as boy_module
+
+Boy = boy_module.Boy
 
 
 class BoyTests(unittest.TestCase):
@@ -179,7 +181,7 @@ class BoyTests(unittest.TestCase):
         padding = self.boy.FOOT_PADDING[bottom // 100][0]
         self.assertEqual((width, height), (150, 150))
         self.assertEqual(center_y - height / 2 + padding * 1.5, self.boy.GROUND_Y)
-        with patch('Boy.get_canvas_width', return_value=100):
+        with patch.object(boy_module, 'get_canvas_width', return_value=100):
             self.boy.update(0.1)
         self.assertEqual(self.boy.x, 50)
 
