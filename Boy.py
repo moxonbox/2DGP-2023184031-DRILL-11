@@ -56,6 +56,19 @@ class Run(BoyState):
         super().__init__('run')
 
 
+class Jump(BoyState):
+    def __init__(self):
+        super().__init__('jump')
+
+    def enter(self, event_data):
+        super().enter(event_data)
+        event_data.model.vertical_speed = event_data.model.JUMP_SPEED
+
+    def update(self, boy, dt):
+        boy.animate_and_move(dt)
+        boy.update_jump(dt)
+
+
 class Boy:
     # Grass is centered at y=30; its visible surface near the boy is y=55.
     GROUND_Y = 55
