@@ -41,6 +41,21 @@ class Sleep(BoyState):
         boy.draw_sleep()
 
 
+class SlowWalk(BoyState):
+    def __init__(self):
+        super().__init__('slow_walk')
+
+
+class Walk(BoyState):
+    def __init__(self):
+        super().__init__('walk')
+
+
+class Run(BoyState):
+    def __init__(self):
+        super().__init__('run')
+
+
 class Boy:
     # Grass is centered at y=30; its visible surface near the boy is y=55.
     GROUND_Y = 55
