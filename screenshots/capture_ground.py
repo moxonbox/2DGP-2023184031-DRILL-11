@@ -34,7 +34,7 @@ try:
                     main.boy.jump()
                     main.boy.update(0.2)
                 elif state == 'autorun':
-                    for key in (pico.SDLK_d if direction == 1 else pico.SDLK_a, pico.SDLK_e):
+                    for key in (pico.SDLK_d if direction == 1 else pico.SDLK_s, pico.SDLK_a):
                         main.boy.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
                 else:
                     main.boy.machine.set_state(state)

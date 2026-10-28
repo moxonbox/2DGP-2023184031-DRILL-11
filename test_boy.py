@@ -8,8 +8,8 @@ from unittest.mock import Mock, patch
 
 pico = ModuleType('pico2d')
 for value, name in enumerate((
-    'SDL_KEYDOWN', 'SDL_KEYUP', 'SDLK_a', 'SDLK_d',
-    'SDLK_LSHIFT', 'SDLK_RSHIFT', 'SDLK_LCTRL', 'SDLK_RCTRL', 'SDLK_SPACE', 'SDLK_e',
+    'SDL_KEYDOWN', 'SDL_KEYUP', 'SDLK_s', 'SDLK_d',
+    'SDLK_LSHIFT', 'SDLK_RSHIFT', 'SDLK_LCTRL', 'SDLK_RCTRL', 'SDLK_SPACE', 'SDLK_a',
 )):
     setattr(pico, name, value)
 pico.load_image = Mock()
@@ -65,7 +65,7 @@ class BoyTests(unittest.TestCase):
         velocity = self.boy.vertical_speed
         self.key(pico.SDLK_SPACE, False)
         self.key(pico.SDLK_SPACE)
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.assertEqual((self.boy.state, self.boy.vertical_speed), ('jump', velocity))
 
     def test_jump_release_and_reverse_lands_in_current_state(self):
@@ -73,7 +73,7 @@ class BoyTests(unittest.TestCase):
         self.key(pico.SDLK_SPACE)
         self.boy.update(0.1)
         self.key(pico.SDLK_d, False)
-        self.key(pico.SDLK_a)
+        self.key(pico.SDLK_s)
         self.key(pico.SDLK_LCTRL)
         self.boy.update(0.8)
         self.assertEqual((self.boy.state, self.boy.direction), ('slow_walk', -1))
@@ -90,7 +90,7 @@ class BoyTests(unittest.TestCase):
 
     def test_autorun_latches_movement_and_expires_then_sleeps(self):
         self.key(pico.SDLK_d)
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.key(pico.SDLK_d, False)
         self.boy.update(0.5)
         self.assertEqual((self.boy.state, self.boy.x), ('autorun', 520))
@@ -100,12 +100,12 @@ class BoyTests(unittest.TestCase):
         self.assertEqual(self.boy.state, 'Sleep')
 
     def test_autorun_new_state_keys_cancel_immediately(self):
-        for key, state in ((pico.SDLK_a, 'walk'), (pico.SDLK_LCTRL, 'idle'),
+        for key, state in ((pico.SDLK_s, 'walk'), (pico.SDLK_LCTRL, 'idle'),
                            (pico.SDLK_LSHIFT, 'idle'), (pico.SDLK_SPACE, 'jump')):
             with self.subTest(key=key):
                 self.boy = Boy()
                 self.key(pico.SDLK_d)
-                self.key(pico.SDLK_e)
+                self.key(pico.SDLK_a)
                 self.key(pico.SDLK_d, False)
                 self.key(key)
                 self.assertEqual(self.boy.state, state)
@@ -116,24 +116,24 @@ class BoyTests(unittest.TestCase):
                 self.boy = Boy()
                 self.boy.machine.set_state(source)
                 self.boy.direction = 1 if source in ('walk', 'slow_walk', 'run') else 0
-                self.key(pico.SDLK_e)
+                self.key(pico.SDLK_a)
                 self.boy.update(0.1)
                 self.assertEqual((self.boy.state, self.boy.auto_state), ('autorun', source))
                 self.assertAlmostEqual(self.boy.x, 400 + self.boy.ANIMATIONS[source][2] * 1.5 * 0.1)
 
     def test_autorun_toggle_repeat_and_unrelated_keys(self):
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.boy.update(4)
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.key('unrelated')
         self.assertEqual((self.boy.state, self.boy.auto_elapsed), ('autorun', 4))
-        self.key(pico.SDLK_e, False)
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a, False)
+        self.key(pico.SDLK_a)
         self.assertEqual(self.boy.state, 'idle')
 
     def test_autorun_repeated_held_movement_key_does_not_cancel(self):
         self.key(pico.SDLK_d)
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.key(pico.SDLK_d)
         self.assertEqual(self.boy.state, 'autorun')
         self.key(pico.SDLK_d, False)
@@ -141,31 +141,31 @@ class BoyTests(unittest.TestCase):
         self.assertEqual(self.boy.state, 'walk')
 
     def test_autorun_timeout_preserves_remaining_idle_time(self):
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.boy.update(9)
         self.assertEqual((self.boy.state, self.boy.idle_elapsed), ('idle', 4))
 
     def test_autorun_reflects_at_both_scaled_edges(self):
         for key, start, expected, direction in (
-            (pico.SDLK_d, 720, 706, -1), (pico.SDLK_a, 80, 94, 1),
+            (pico.SDLK_d, 720, 706, -1), (pico.SDLK_s, 80, 94, 1),
         ):
             with self.subTest(direction=direction):
                 self.boy = Boy()
                 self.boy.x = start
                 self.key(key)
-                self.key(pico.SDLK_e)
+                self.key(pico.SDLK_a)
                 self.boy.update(0.1)
                 self.assertAlmostEqual(self.boy.x, expected)
                 self.assertEqual((self.boy.direction, self.boy.face_dir), (direction, direction))
 
     def test_autorun_multiple_bounces_match_small_steps(self):
-        for key in (pico.SDLK_a, pico.SDLK_d):
+        for key in (pico.SDLK_s, pico.SDLK_d):
             self.boy = Boy()
             self.key(key)
             self.key(pico.SDLK_LSHIFT)
-            self.key(pico.SDLK_e)
+            self.key(pico.SDLK_a)
             other = Boy()
-            for input_key in (key, pico.SDLK_LSHIFT, pico.SDLK_e):
+            for input_key in (key, pico.SDLK_LSHIFT, pico.SDLK_a):
                 other.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=input_key))
             self.boy.update(4.5)
             for _ in range(45):
@@ -175,7 +175,7 @@ class BoyTests(unittest.TestCase):
 
     def test_autorun_scaled_feet_and_narrow_viewport(self):
         self.key(pico.SDLK_d)
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.boy.draw()
         _, bottom, _, _, _, center_y, width, height = self.boy.image.clip_draw.call_args.args
         padding = self.boy.FOOT_PADDING[bottom // 100][0]
@@ -187,7 +187,7 @@ class BoyTests(unittest.TestCase):
 
     def test_autorun_sleep_keeps_rotated_pose(self):
         self.boy.update(5)
-        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_a)
         self.boy.draw()
         self.assertEqual(self.boy.sprite_scale(), 1)
         self.assertTrue(self.boy.image.clip_composite_draw.called)
@@ -265,7 +265,7 @@ class BoyTests(unittest.TestCase):
         self.assertEqual(self.boy.y, self.boy.GROUND_Y + 36)
 
     def test_sleep_enters_requested_movement_state(self):
-        for direction_key, direction in ((pico.SDLK_a, -1), (pico.SDLK_d, 1)):
+        for direction_key, direction in ((pico.SDLK_s, -1), (pico.SDLK_d, 1)):
             for modifier, state, speed in (
                 (None, 'walk', 160),
                 (pico.SDLK_LCTRL, 'slow_walk', 60),
@@ -310,9 +310,9 @@ class BoyTests(unittest.TestCase):
                         self.assertEqual(center_y - 50 + padding, self.boy.GROUND_Y)
 
     def test_key_repeat_preserves_animation(self):
-        self.key(pico.SDLK_a)
+        self.key(pico.SDLK_s)
         self.boy.update(0.125)
-        self.key(pico.SDLK_a)
+        self.key(pico.SDLK_s)
         self.assertEqual(self.boy.frame, 1)
         self.boy.draw()
         self.assertEqual(self.boy.image.clip_draw.call_args.args[1], 0)
@@ -332,7 +332,7 @@ class BoyTests(unittest.TestCase):
     def test_run_restores_slow_walk_after_ctrl_release(self):
         self.key(pico.SDLK_LCTRL)
         self.assertEqual(self.boy.state, 'idle')
-        self.key(pico.SDLK_a)
+        self.key(pico.SDLK_s)
         self.assertEqual(self.boy.state, 'slow_walk')
         self.boy.update(0.5)
         self.assertEqual(self.boy.x, 370)
@@ -352,7 +352,7 @@ class BoyTests(unittest.TestCase):
         self.key(pico.SDLK_RSHIFT, False)
         self.assertEqual(self.boy.state, 'slow_walk')
         self.key(pico.SDLK_LCTRL)
-        self.key(pico.SDLK_a, False)
+        self.key(pico.SDLK_s, False)
         self.assertEqual(self.boy.state, 'idle')
 
     def test_slow_walk_returns_to_walk(self):
@@ -376,7 +376,7 @@ class BoyTests(unittest.TestCase):
         self.assertEqual((self.boy.state, self.boy.direction), ('idle', 0))
 
     def test_opposite_arrows_cancel_and_resume(self):
-        self.key(pico.SDLK_a)
+        self.key(pico.SDLK_s)
         self.key(pico.SDLK_d)
         self.assertEqual(self.boy.state, 'idle')
         self.boy.update(0.25)
@@ -406,7 +406,7 @@ class BoyTests(unittest.TestCase):
         self.boy.update(10)
         self.assertEqual(self.boy.x, 750)
         self.key(pico.SDLK_d, False)
-        self.key(pico.SDLK_a)
+        self.key(pico.SDLK_s)
         self.boy.update(10)
         self.assertEqual(self.boy.x, 50)
 
