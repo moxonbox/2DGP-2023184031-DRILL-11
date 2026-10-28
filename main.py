@@ -35,15 +35,14 @@ def reset_world():
 
 
 def update_world(dt):
-    # Subdivide physics without dropping elapsed time from the five-second timers.
-    while dt > 0:
-        step = min(dt, 0.1)
-        for o in world:
-            if o is boy:
-                o.update(step)
-            else:
-                o.update()
-        dt -= step
+    if dt <= 0:
+        return
+    # States split elapsed time at landing and timeout boundaries themselves.
+    for o in world:
+        if o is boy:
+            o.update(dt)
+        else:
+            o.update()
 
 
 def render_world():

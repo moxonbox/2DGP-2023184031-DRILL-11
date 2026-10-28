@@ -25,11 +25,9 @@ class MainTests(unittest.TestCase):
         self.main.world = [Mock(), self.main.boy]
         self.main.running = True
 
-    def test_long_frame_preserves_all_elapsed_time_in_small_steps(self):
-        self.main.update_world(5)
-        steps = [call.args[0] for call in self.main.boy.update.call_args_list]
-        self.assertAlmostEqual(sum(steps), 5)
-        self.assertTrue(all(0 < step <= 0.1 for step in steps))
+    def test_long_frame_preserves_time_without_a_catchup_loop(self):
+        self.main.update_world(3600)
+        self.main.boy.update.assert_called_once_with(3600)
 
     def test_zero_elapsed_time_skips_updates(self):
         self.main.update_world(0)
