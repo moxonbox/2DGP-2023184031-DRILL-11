@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 pico = ModuleType('pico2d')
 for value, name in enumerate((
     'SDL_KEYDOWN', 'SDL_KEYUP', 'SDLK_a', 'SDLK_d',
-    'SDLK_LSHIFT', 'SDLK_RSHIFT', 'SDLK_LCTRL', 'SDLK_RCTRL', 'SDLK_SPACE',
+    'SDLK_LSHIFT', 'SDLK_RSHIFT', 'SDLK_LCTRL', 'SDLK_RCTRL', 'SDLK_SPACE', 'SDLK_e',
 )):
     setattr(pico, name, value)
 pico.load_image = Mock()

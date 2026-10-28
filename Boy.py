@@ -4,7 +4,7 @@ from math import pi
 from pico2d import (
     load_image, get_canvas_width, SDL_KEYDOWN, SDL_KEYUP,
     SDLK_a, SDLK_d, SDLK_LSHIFT, SDLK_RSHIFT, SDLK_LCTRL, SDLK_RCTRL,
-    SDLK_SPACE,
+    SDLK_SPACE, SDLK_e,
 )
 from transitions import Machine, State
 
@@ -157,6 +157,19 @@ class Boy:
     def handle_event(self, event):
         if event.type not in (SDL_KEYDOWN, SDL_KEYUP):
             return
+        if event.key == SDLK_e:
+            if event.type == SDL_KEYUP:
+                self.auto_key_down = False
+            elif not self.auto_key_down:
+                self.auto_key_down = True
+                if self.state == 'autorun':
+                    self.stop()
+                    self.apply_movement()
+                elif self.state != 'jump':
+                    self.auto_state = self.state
+                    self.auto_elapsed = 0
+                    self.autorun()
+            return
         if self.state == 'Sleep' and event.type == SDL_KEYDOWN and event.key == SDLK_SPACE:
             self.wake()
             return
@@ -165,10 +178,18 @@ class Boy:
         ):
             return
         if event.type == SDL_KEYDOWN:
+            if event.key in self.keys:
+                return
             self.keys.add(event.key)
         else:
             self.keys.discard(event.key)
+        if self.state == 'autorun':
+            if event.type == SDL_KEYUP:
+                return
+            self.stop()
+        self.apply_movement()
 
+    def apply_movement(self):
         self.direction = int(SDLK_d in self.keys) - int(SDLK_a in self.keys)
         if self.state == 'Sleep' and not self.direction:
             return
