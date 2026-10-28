@@ -27,6 +27,15 @@ class BoyTests(unittest.TestCase):
             type=pico.SDL_KEYDOWN if down else pico.SDL_KEYUP, key=key,
         ))
 
+    def test_seven_distinct_state_classes_are_registered(self):
+        expected = {
+            'idle': 'Idle', 'Sleep': 'Sleep', 'slow_walk': 'SlowWalk',
+            'walk': 'Walk', 'run': 'Run', 'jump': 'Jump', 'autorun': 'AutoRun',
+        }
+        self.assertEqual(set(self.boy.machine.states), set(expected))
+        for name, class_name in expected.items():
+            self.assertEqual(type(self.boy.machine.get_state(name)).__name__, class_name)
+
     def test_idle_loops_without_moving(self):
         self.assertEqual(self.boy.state, 'idle')
         self.boy.update(0.25)
