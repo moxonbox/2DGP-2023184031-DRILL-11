@@ -143,6 +143,53 @@ class BoyTests(unittest.TestCase):
         self.boy.update(9)
         self.assertEqual((self.boy.state, self.boy.idle_elapsed), ('idle', 4))
 
+    def test_autorun_reflects_at_both_scaled_edges(self):
+        for key, start, expected, direction in (
+            (pico.SDLK_d, 720, 706, -1), (pico.SDLK_a, 80, 94, 1),
+        ):
+            with self.subTest(direction=direction):
+                self.boy = Boy()
+                self.boy.x = start
+                self.key(key)
+                self.key(pico.SDLK_e)
+                self.boy.update(0.1)
+                self.assertAlmostEqual(self.boy.x, expected)
+                self.assertEqual((self.boy.direction, self.boy.face_dir), (direction, direction))
+
+    def test_autorun_multiple_bounces_match_small_steps(self):
+        for key in (pico.SDLK_a, pico.SDLK_d):
+            self.boy = Boy()
+            self.key(key)
+            self.key(pico.SDLK_LSHIFT)
+            self.key(pico.SDLK_e)
+            other = Boy()
+            for input_key in (key, pico.SDLK_LSHIFT, pico.SDLK_e):
+                other.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=input_key))
+            self.boy.update(4.5)
+            for _ in range(45):
+                other.update(0.1)
+            self.assertAlmostEqual(self.boy.x, other.x)
+            self.assertEqual(self.boy.direction, other.direction)
+
+    def test_autorun_scaled_feet_and_narrow_viewport(self):
+        self.key(pico.SDLK_d)
+        self.key(pico.SDLK_e)
+        self.boy.draw()
+        _, bottom, _, _, _, center_y, width, height = self.boy.image.clip_draw.call_args.args
+        padding = self.boy.FOOT_PADDING[bottom // 100][0]
+        self.assertEqual((width, height), (150, 150))
+        self.assertEqual(center_y - height / 2 + padding * 1.5, self.boy.GROUND_Y)
+        with patch('Boy.get_canvas_width', return_value=100):
+            self.boy.update(0.1)
+        self.assertEqual(self.boy.x, 50)
+
+    def test_autorun_sleep_keeps_rotated_pose(self):
+        self.boy.update(5)
+        self.key(pico.SDLK_e)
+        self.boy.draw()
+        self.assertEqual(self.boy.sprite_scale(), 1)
+        self.assertTrue(self.boy.image.clip_composite_draw.called)
+
     def test_idle_loops_without_moving(self):
         self.assertEqual(self.boy.state, 'idle')
         self.boy.update(0.25)
