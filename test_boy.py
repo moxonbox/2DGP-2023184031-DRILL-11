@@ -190,6 +190,15 @@ class BoyTests(unittest.TestCase):
         self.assertEqual(self.boy.sprite_scale(), 1)
         self.assertTrue(self.boy.image.clip_composite_draw.called)
 
+    def test_held_space_wakes_without_immediate_jump(self):
+        self.boy.update(5)
+        self.key(pico.SDLK_SPACE)
+        self.key(pico.SDLK_SPACE)
+        self.assertEqual(self.boy.state, 'idle')
+        self.key(pico.SDLK_SPACE, False)
+        self.key(pico.SDLK_SPACE)
+        self.assertEqual(self.boy.state, 'jump')
+
     def test_idle_loops_without_moving(self):
         self.assertEqual(self.boy.state, 'idle')
         self.boy.update(0.25)

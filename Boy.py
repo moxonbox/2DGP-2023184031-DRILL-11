@@ -171,6 +171,7 @@ class Boy:
                     self.autorun()
             return
         if self.state == 'Sleep' and event.type == SDL_KEYDOWN and event.key == SDLK_SPACE:
+            self.keys.add(SDLK_SPACE)
             self.wake()
             return
         if event.key not in (
