@@ -246,8 +246,34 @@ class Boy:
     def animate_and_move(self, dt, bounce=False):
         frames, fps, speed, _, _ = self.ANIMATIONS[self.animation_state()]
         self.frame = (self.frame + fps * dt) % len(frames)
-        self.x = max(50, min(get_canvas_width() - 50,
-                             self.x + self.direction * speed * dt))
+        half_width = 50 * self.sprite_scale()
+        left, right = half_width, get_canvas_width() - half_width
+        if right <= left:
+            self.x = get_canvas_width() / 2
+            return
+        self.x = max(left, min(right, self.x))
+        if bounce:
+            speed *= self.AUTO_MULTIPLIER
+        position = self.x + self.direction * speed * dt
+        if bounce and speed and self.direction:
+            # Fold the travelled distance into the viewport, including multiple bounces.
+            span = right - left
+            phase = (position - left) % (2 * span)
+            self.x = left + (phase if phase <= span else 2 * span - phase)
+            if phase == 0:
+                self.direction = 1
+            elif phase == span:
+                self.direction = -1
+            elif phase > span:
+                self.direction *= -1
+            self.face_dir = self.direction
+        else:
+            self.x = max(left, min(right, position))
+
+    def sprite_scale(self):
+        if self.state == 'autorun' and self.ANIMATIONS[self.auto_state][2]:
+            return self.AUTO_MULTIPLIER
+        return 1
 
     def draw(self):
         self.machine.get_state(self.state).draw(self)
