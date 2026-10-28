@@ -88,6 +88,34 @@ class BoyTests(unittest.TestCase):
         self.assertAlmostEqual(self.boy.y, other.y)
         self.assertAlmostEqual(self.boy.vertical_speed, other.vertical_speed)
 
+    def test_idle_sleeps_after_fifty_tenth_second_updates(self):
+        for _ in range(50):
+            self.boy.update(0.1)
+        self.assertEqual(self.boy.state, 'Sleep')
+
+    def test_long_jump_update_preserves_time_after_landing(self):
+        self.key(pico.SDLK_SPACE)
+        self.boy.update(6)
+        self.assertEqual(self.boy.state, 'Sleep')
+        self.assertEqual(self.boy.y, self.boy.GROUND_Y + 36)
+
+    def test_jump_landing_matches_small_updates(self):
+        other = Boy()
+        other.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_SPACE))
+        self.key(pico.SDLK_SPACE)
+        self.boy.update(2)
+        for _ in range(20):
+            other.update(0.1)
+        self.assertEqual(self.boy.state, other.state)
+        self.assertAlmostEqual(self.boy.idle_elapsed, other.idle_elapsed)
+        self.assertAlmostEqual(self.boy.frame, other.frame)
+
+    def test_autorun_expires_after_fifty_tenth_second_updates(self):
+        self.key(pico.SDLK_a)
+        for _ in range(50):
+            self.boy.update(0.1)
+        self.assertEqual(self.boy.state, 'idle')
+
     def test_autorun_latches_movement_and_expires_then_sleeps(self):
         self.key(pico.SDLK_d)
         self.key(pico.SDLK_a)

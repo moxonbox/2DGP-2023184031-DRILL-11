@@ -1,5 +1,5 @@
 from pathlib import Path
-from math import pi
+from math import isclose, pi, sqrt
 
 from pico2d import (
     load_image, get_canvas_width, SDL_KEYDOWN, SDL_KEYUP,
@@ -22,10 +22,13 @@ class Idle(BoyState):
         super().__init__('idle')
 
     def update(self, boy, dt):
-        boy.idle_elapsed += dt
-        if boy.idle_elapsed >= 5.0:
+        active_dt = min(dt, max(0.0, 5.0 - boy.idle_elapsed))
+        boy.animate_and_move(active_dt)
+        boy.idle_elapsed += active_dt
+        if isclose(boy.idle_elapsed, 5.0, rel_tol=0, abs_tol=1e-9):
             boy.sleep()
-        boy.animate_and_move(dt)
+            if dt > active_dt:
+                boy.update(dt - active_dt)
 
 
 class Sleep(BoyState):
@@ -65,7 +68,6 @@ class Jump(BoyState):
         event_data.model.vertical_speed = event_data.model.JUMP_SPEED
 
     def update(self, boy, dt):
-        boy.animate_and_move(dt)
         boy.update_jump(dt)
 
 
@@ -78,7 +80,7 @@ class AutoRun(BoyState):
         active_dt = min(dt, remaining)
         boy.animate_and_move(active_dt, bounce=True)
         boy.auto_elapsed += active_dt
-        if boy.auto_elapsed >= 5.0:
+        if isclose(boy.auto_elapsed, 5.0, rel_tol=0, abs_tol=1e-9):
             boy.keys.clear()
             boy.direction = 0
             boy.stop()
@@ -150,9 +152,6 @@ class Boy:
     def reset_animation(self):
         self.frame = 0
         self.idle_elapsed = 0
-        if self.state == 'Sleep':
-            self.keys.clear()
-            self.direction = 0
 
     def handle_event(self, event):
         if event.type not in (SDL_KEYDOWN, SDL_KEYUP):
@@ -229,13 +228,22 @@ class Boy:
         self.machine.get_state(self.state).update(self, dt)
 
     def update_jump(self, dt):
-        self.y += self.vertical_speed * dt - 0.5 * self.GRAVITY * dt * dt
-        self.vertical_speed -= self.GRAVITY * dt
-        if self.y <= self.GROUND_Y + 36 and self.vertical_speed <= 0:
-            self.y = self.GROUND_Y + 36
+        ground_y = self.GROUND_Y + 36
+        height = max(0.0, self.y - ground_y)
+        landing_time = (self.vertical_speed + sqrt(
+            self.vertical_speed ** 2 + 2 * self.GRAVITY * height
+        )) / self.GRAVITY
+        active_dt = min(dt, landing_time)
+        self.animate_and_move(active_dt)
+        self.y += self.vertical_speed * active_dt - 0.5 * self.GRAVITY * active_dt ** 2
+        self.vertical_speed -= self.GRAVITY * active_dt
+        if dt >= landing_time:
+            self.y = ground_y
             self.vertical_speed = 0
             target = self.air_state
             getattr(self, 'stop' if target == 'idle' else target)()
+            if dt > active_dt:
+                self.update(dt - active_dt)
 
     def animation_state(self):
         if self.state == 'jump':
