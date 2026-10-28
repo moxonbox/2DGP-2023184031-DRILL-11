@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Boy 상태 전환 다이어그램</title>
+  <desc id="desc">일곱 상태, 지상 이동 입력, 수면, 점프, 자동 유지의 전환 조건</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker>
+    <style>text{font-family:'Malgun Gothic',sans-serif;fill:#0f172a;font-size:17px}.title{font-size:28px;font-weight:bold}.name{font-size:22px;font-weight:bold}.small{font-size:15px}.edge{fill:none;stroke:#475569;stroke-width:2;marker-end:url(#arrow)}.node{fill:white;stroke:#64748b;stroke-width:2}.label{fill:#f8fafc}</style>
+  </defs>
+  <rect width="1200" height="900" fill="#f8fafc"/>
+  <text x="50" y="52" class="title">Boy 상태 전환 · PRD_Dev</text>
+  <text x="50" y="82">A/D 이동 · Ctrl 느리게 · Shift 달리기 · Space 점프/깨우기 · E 자동 유지</text>
+  <rect x="45" y="120" width="705" height="370" rx="20" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
+  <text x="65" y="154" class="name">Ground · 지상 상태</text>
+  <circle cx="83" cy="218" r="9" fill="#0f172a"/><path class="edge" d="M94 218H139"/>
+  <rect class="node" x="140" y="180" width="220" height="85" rx="12"/><text class="name" x="163" y="212">idle · Idle</text><text x="163" y="243">정지 / 4 FPS</text>
+  <rect class="node" x="485" y="180" width="220" height="85" rx="12"/><text class="name" x="506" y="212">walk · Walk</text><text x="506" y="243">160 px/s / 8 FPS</text>
+  <path class="edge" d="M360 208H485"/><text class="small" x="395" y="199">A / D</text>
+  <path class="edge" d="M485 250H360"/><text class="small" x="370" y="280">이동 입력 없음</text>
+  <rect class="node" x="140" y="365" width="220" height="90" rx="12"/><text class="name" x="157" y="397">slow_walk</text><text x="157" y="427">SlowWalk · 60 px/s</text>
+  <rect class="node" x="485" y="365" width="220" height="90" rx="12"/><text class="name" x="506" y="397">run · Run</text><text x="506" y="427">320 px/s / 16 FPS</text>
+  <path class="edge" d="M505 265L340 365"/><text class="small" x="390" y="319">Ctrl</text>
+  <path class="edge" d="M365 392L535 265"/><text class="small" x="339" y="354">Ctrl 해제</text>
+  <path class="edge" d="M620 265V365"/><text class="small" x="632" y="322">Shift</text>
+  <path class="edge" d="M565 365V265"/><text class="small" x="453" y="343">Shift 해제</text>
+  <rect class="node" x="850" y="180" width="290" height="110" rx="12"/><text class="name" x="873" y="216">sleep · Sleep</text><text x="873" y="245">몸 아래쪽 y=40</text><text x="873" y="271">누운 자세 / 이동 없음</text>
+  <path class="edge" d="M250 180V110H995V180"/><rect class="label" x="790" y="96" width="170" height="27"/><text x="800" y="116">idle 진입 후 5초</text>
+  <path class="edge" d="M850 235H750"/><text class="small" x="770" y="221">A/D</text>
+  <path class="edge" d="M995 290V310H250V265"/><rect class="label" x="758" y="298" width="305" height="25"/><text class="small" x="767" y="316">Space: 깨우기만 수행 → idle</text>
+  <rect class="node" x="85" y="590" width="330" height="130" rx="12"/><text class="name" x="108" y="628">jump · Jump</text><text x="108" y="659">포물선 운동 / 공중 이동 가능</text><text x="108" y="690">이중 점프 금지 / E 무시</text>
+  <path class="edge" d="M190 490V590"/><text x="203" y="545">Space</text>
+  <path class="edge" d="M350 590V490"/><text x="363" y="526">착지</text><text class="small" x="363" y="551">현재 입력으로 지상 상태 결정</text>
+  <rect class="node" x="760" y="550" width="380" height="190" rx="12"/><text class="name" x="783" y="588">autorun · AutoRun</text><text x="783" y="620">진입 상태·방향 유지 / 키 해제 무시</text><text x="783" y="652">이동 시 속도·크기 ×1.5</text><text x="783" y="684">뷰포트 경계에서 반전</text><text x="783" y="716">5초 후 idle / 새 상태 입력 시 해제</text>
+  <path class="edge" d="M705 455L805 550"/><text x="748" y="503">E</text>
+  <path class="edge" d="M1070 290V550"/><text x="1082" y="427">E</text>
+  <path class="edge" d="M760 617H600V490"/><text class="small" x="615" y="587">상태 키 / E 해제</text>
+  <path class="edge" d="M760 700H455V540H250V490"/><rect class="label" x="473" y="683" width="270" height="25"/><text x="485" y="703">5초 경과 → idle</text>
+  <text x="50" y="795">지상 공통: A/D 없음 → idle · Ctrl + 이동 → slow_walk · Shift + 이동 → run</text>
+  <text x="50" y="827">Shift 해제: 달리기 직전 보행 복귀 · 양방향 동시 입력: 정지 · 동일 상태 반복 입력: 프레임 유지</text>
+  <text x="50" y="859">자동 유지 중 상태 키: A / D / Ctrl / Shift / Space · Sleep의 보조키 단독 입력: 수면 유지</text>
+</svg>
