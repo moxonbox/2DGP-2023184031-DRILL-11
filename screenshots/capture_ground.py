@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
 os.environ['SDL_AUDIODRIVER'] = 'dummy'
@@ -25,9 +26,18 @@ try:
     if not surface:
         raise RuntimeError('Cannot allocate capture surface')
     try:
-        for state in main.boy.ANIMATIONS:
+        states = (*main.boy.ANIMATIONS, 'jump', 'autorun')
+        for state in states:
             for direction in (1, -1):
-                main.boy.machine.set_state(state)
+                main.reset_world()
+                if state == 'jump':
+                    main.boy.jump()
+                    main.boy.update(0.2)
+                elif state == 'autorun':
+                    for key in (pico.SDLK_d if direction == 1 else pico.SDLK_a, pico.SDLK_e):
+                        main.boy.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
+                else:
+                    main.boy.machine.set_state(state)
                 main.boy.face_dir = direction
                 main.boy.frame = 0
                 pico.clear_canvas()
@@ -40,7 +50,7 @@ try:
                 if pico.IMG_SavePNG(surface, str(path).encode('utf-8')) != 0:
                     raise RuntimeError(pico.SDL_GetError())
                 pico.update_canvas()
-        print(f'Captured {len(main.boy.ANIMATIONS) * 2} actual SDL frames: {output}')
+        print(f'Captured {len(states) * 2} actual SDL frames: {output}')
     finally:
         pico.SDL_FreeSurface(surface)
 finally:
