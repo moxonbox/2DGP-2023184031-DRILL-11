@@ -69,6 +69,29 @@ class Jump(BoyState):
         boy.update_jump(dt)
 
 
+class AutoRun(BoyState):
+    def __init__(self):
+        super().__init__('autorun')
+
+    def update(self, boy, dt):
+        remaining = max(0.0, 5.0 - boy.auto_elapsed)
+        active_dt = min(dt, remaining)
+        boy.animate_and_move(active_dt, bounce=True)
+        boy.auto_elapsed += active_dt
+        if boy.auto_elapsed >= 5.0:
+            boy.keys.clear()
+            boy.direction = 0
+            boy.stop()
+            if dt > active_dt:
+                boy.update(dt - active_dt)
+
+    def draw(self, boy):
+        if boy.auto_state == 'Sleep':
+            boy.draw_sleep()
+        else:
+            boy.draw_sprite()
+
+
 class Boy:
     # Grass is centered at y=30; its visible surface near the boy is y=55.
     GROUND_Y = 55
