@@ -12,8 +12,10 @@ def handle_events():
     for event in event_list:
         if event.type == SDL_QUIT:
             running = False
+            break
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             running = False
+            break
         else:
             boy.handle_event(event)
 
@@ -33,11 +35,15 @@ def reset_world():
 
 
 def update_world(dt):
-    for o in world:
-        if o is boy:
-            o.update(dt)
-        else:
-            o.update()
+    # Subdivide physics without dropping elapsed time from the five-second timers.
+    while dt > 0:
+        step = min(dt, 0.1)
+        for o in world:
+            if o is boy:
+                o.update(step)
+            else:
+                o.update()
+        dt -= step
 
 
 def render_world():
@@ -55,9 +61,11 @@ if __name__ == '__main__':
         previous_time = perf_counter()
         while running:
             current_time = perf_counter()
-            dt = min(current_time - previous_time, 0.1)
+            dt = current_time - previous_time
             previous_time = current_time
             handle_events()
+            if not running:
+                break
             update_world(dt)
             render_world()
             delay(0.01)
