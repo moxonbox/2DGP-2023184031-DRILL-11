@@ -146,8 +146,9 @@ class BoyTests(unittest.TestCase):
                 self.boy.direction = 1 if source in ('walk', 'slow_walk', 'run') else 0
                 self.key(pico.SDLK_a)
                 self.boy.update(0.1)
-                self.assertEqual((self.boy.state, self.boy.auto_state), ('autorun', source))
-                self.assertAlmostEqual(self.boy.x, 400 + self.boy.ANIMATIONS[source][2] * 1.5 * 0.1)
+                expected = 'run' if source in ('idle', 'Sleep') else source
+                self.assertEqual((self.boy.state, self.boy.auto_state), ('autorun', expected))
+                self.assertAlmostEqual(self.boy.x, 400 + self.boy.ANIMATIONS[expected][2] * 1.5 * 0.1)
 
     def test_autorun_toggle_repeat_and_unrelated_keys(self):
         self.key(pico.SDLK_a)
@@ -213,12 +214,40 @@ class BoyTests(unittest.TestCase):
             self.boy.update(0.1)
         self.assertEqual(self.boy.x, 50)
 
-    def test_autorun_sleep_keeps_rotated_pose(self):
-        self.boy.update(5)
-        self.key(pico.SDLK_a)
-        self.boy.draw()
-        self.assertEqual(self.boy.sprite_scale(), 1)
-        self.assertTrue(self.boy.image.clip_composite_draw.called)
+    def test_idle_and_sleep_autorun_use_run_in_facing_direction(self):
+        for source in ('idle', 'Sleep'):
+            for direction in (-1, 1):
+                with self.subTest(source=source, direction=direction):
+                    self.boy = Boy()
+                    if source == 'Sleep':
+                        self.boy.update(5)
+                    self.boy.face_dir = direction
+                    self.key(pico.SDLK_a)
+                    self.key(pico.SDLK_a, False)
+                    self.assertEqual((self.boy.state, self.boy.auto_state), ('autorun', 'run'))
+                    self.assertEqual(self.boy.direction, direction)
+                    self.boy.update(0.1)
+                    self.assertAlmostEqual(self.boy.x, 400 + direction * 48)
+                    self.assertAlmostEqual(self.boy.frame, 1.6)
+                    self.boy.draw()
+                    args = self.boy.image.clip_draw.call_args.args
+                    self.assertEqual(args[1], 100 if direction == 1 else 0)
+                    self.assertEqual(args[-2:], (150, 150))
+
+    def test_idle_and_sleep_autorun_still_expire_and_allow_state_input(self):
+        for source in ('idle', 'Sleep'):
+            for action in ('timeout', 'input'):
+                with self.subTest(source=source, action=action):
+                    self.boy = Boy()
+                    if source == 'Sleep':
+                        self.boy.update(5)
+                    self.key(pico.SDLK_a)
+                    if action == 'timeout':
+                        self.boy.update(5)
+                        self.assertEqual((self.boy.state, self.boy.direction), ('idle', 0))
+                    else:
+                        self.key(pico.SDLK_s)
+                        self.assertEqual((self.boy.state, self.boy.direction), ('walk', -1))
 
     def test_held_space_wakes_without_immediate_jump(self):
         self.boy.update(5)

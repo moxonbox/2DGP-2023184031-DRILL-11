@@ -28,7 +28,7 @@
   <rect class="node" x="85" y="590" width="330" height="130" rx="12"/><text class="name" x="108" y="628">jump · Jump</text><text x="108" y="659">포물선 운동 / 공중 이동 가능</text><text x="108" y="690">이중 점프 금지 / A 무시</text>
   <path class="edge" d="M190 490V590"/><text x="203" y="545">Space</text>
   <path class="edge" d="M350 590V490"/><text x="363" y="526">착지</text><text class="small" x="363" y="551">현재 입력으로 지상 상태 결정</text>
-  <rect class="node" x="760" y="550" width="380" height="190" rx="12"/><text class="name" x="783" y="588">autorun · AutoRun</text><text x="783" y="620">진입 상태·방향 유지 / 키 해제 무시</text><text x="783" y="652">이동 시 속도·크기 ×1.5</text><text x="783" y="684">뷰포트 경계에서 반전</text><text x="783" y="716">5초 후 idle / 새 상태 입력 시 해제</text>
+  <rect class="node" x="760" y="550" width="380" height="190" rx="12"/><text class="name" x="783" y="588">autorun · AutoRun</text><text x="783" y="620">idle/sleep → run · 나머지 유지</text><text x="783" y="652">이동 시 속도·크기 ×1.5</text><text x="783" y="684">뷰포트 경계에서 반전</text><text x="783" y="716">5초 후 idle / 새 상태 입력 시 해제</text>
   <path class="edge" d="M705 455L805 550"/><text x="748" y="503">A</text>
   <path class="edge" d="M1070 290V550"/><text x="1082" y="427">A</text>
   <path class="edge" d="M760 617H600V490"/><text class="small" x="615" y="587">상태 키 / A 해제</text>

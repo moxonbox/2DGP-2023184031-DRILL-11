@@ -87,12 +87,6 @@ class AutoRun(BoyState):
             if dt > active_dt:
                 boy.update(dt - active_dt)
 
-    def draw(self, boy):
-        if boy.auto_state == 'Sleep':
-            boy.draw_sleep()
-        else:
-            boy.draw_sprite()
-
 
 class Boy:
     JUMP_SPEED = 420
@@ -165,6 +159,9 @@ class Boy:
                     self.stop()
                     self.apply_movement()
                 elif self.state != 'jump':
+                    if self.state in ('idle', 'Sleep'):
+                        self.direction = self.face_dir
+                        self.run()
                     self.auto_state = self.state
                     self.auto_elapsed = 0
                     self.autorun()
