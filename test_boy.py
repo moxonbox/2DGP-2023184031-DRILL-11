@@ -36,6 +36,56 @@ class BoyTests(unittest.TestCase):
         for name, class_name in expected.items():
             self.assertEqual(type(self.boy.machine.get_state(name)).__name__, class_name)
 
+    def test_stationary_jump_and_landing(self):
+        ground = self.boy.y
+        self.key(pico.SDLK_SPACE)
+        self.assertEqual(self.boy.state, 'jump')
+        self.boy.update(0.2)
+        self.assertAlmostEqual(self.boy.y, ground + 420 * 0.2 - 490 * 0.2 ** 2)
+        self.assertEqual(self.boy.x, 400)
+        self.boy.update(0.7)
+        self.assertEqual((self.boy.state, self.boy.y, self.boy.vertical_speed), ('idle', ground, 0))
+
+    def test_jump_allows_movement_and_modifier_changes(self):
+        self.key(pico.SDLK_d)
+        self.key(pico.SDLK_SPACE)
+        self.boy.update(0.1)
+        self.assertEqual((self.boy.state, self.boy.x), ('jump', 416))
+        self.key(pico.SDLK_LSHIFT)
+        self.boy.update(0.1)
+        self.assertEqual((self.boy.state, self.boy.x), ('jump', 448))
+        self.boy.update(0.7)
+        self.assertEqual(self.boy.state, 'run')
+
+    def test_jump_does_not_restart_in_air_and_ignores_autorun(self):
+        self.key(pico.SDLK_SPACE)
+        self.boy.update(0.2)
+        velocity = self.boy.vertical_speed
+        self.key(pico.SDLK_SPACE, False)
+        self.key(pico.SDLK_SPACE)
+        self.key(pico.SDLK_e)
+        self.assertEqual((self.boy.state, self.boy.vertical_speed), ('jump', velocity))
+
+    def test_jump_release_and_reverse_lands_in_current_state(self):
+        self.key(pico.SDLK_d)
+        self.key(pico.SDLK_SPACE)
+        self.boy.update(0.1)
+        self.key(pico.SDLK_d, False)
+        self.key(pico.SDLK_a)
+        self.key(pico.SDLK_LCTRL)
+        self.boy.update(0.8)
+        self.assertEqual((self.boy.state, self.boy.direction), ('slow_walk', -1))
+
+    def test_jump_height_is_frame_rate_independent(self):
+        other = Boy()
+        other.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_SPACE))
+        self.key(pico.SDLK_SPACE)
+        self.boy.update(0.3)
+        for _ in range(3):
+            other.update(0.1)
+        self.assertAlmostEqual(self.boy.y, other.y)
+        self.assertAlmostEqual(self.boy.vertical_speed, other.vertical_speed)
+
     def test_idle_loops_without_moving(self):
         self.assertEqual(self.boy.state, 'idle')
         self.boy.update(0.25)
